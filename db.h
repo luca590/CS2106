@@ -54,9 +54,5 @@ void resizeDB(int numNewRecords);
 //nr = number of non-empty records in phonebook, ms = Maximum size of phonebook (in records)
 void getDBsize(int *nr, int *ms);
 
-
-
-
-
-
+#endif
 
