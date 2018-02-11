@@ -158,17 +158,17 @@ int loadDB(char* filename) {
 			fgets(buffer, NAME_LENGTH, fp);
 			stripNL(buffer);
 			printf("%d: Name: %s\n", i, buffer);
-			strcpy(database[i].name, buffer)
+			strcpy(database[i].name, buffer);
 
 			fgets(buffer, NAME_LENGTH, fp);
 			stripNL(buffer);
 			printf("%d: Country Code: %s\n", i, buffer);
-			strcpy(database[i].countryCode, buffer)
+			strcpy(database[i].countryCode, buffer);
 			
 			fgets(buffer, NAME_LENGTH, fp);
 			stripNL(buffer);
 			printf("%d: Phone Number: %s\n", i, buffer);
-			strcpy(database[i].phoneNumber, buffer)
+			strcpy(database[i].phoneNumber, buffer);
 
 		}
 

@@ -1,5 +1,5 @@
 CC = gcc
-CCOPTS = -03 -Wall
+CCOPTS = -O3 -Wall
 DEPS = db.h
 
 %.o: %.c $(DEPS)

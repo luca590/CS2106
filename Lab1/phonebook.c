@@ -147,12 +147,13 @@ void savePhonebook() {
 	flushInput();
 
 	printf("\n");
-	int result = saveDB(filename)
+	int result = saveDB(filename);
 
 	if(result == OK)
 		printf("** Save OK! **\n\n");
-	else
-		printf("** Save FAILED! **\n\n");
+		else {
+			printf("** Save FAILED! **\n\n");
+		}
 }
 
 void newEntry() {
@@ -179,7 +180,7 @@ void newEntry() {
 
 	addPerson(name, countryCode, phoneNumber, &result);
 
-	switch(resut) {
+	switch(result) {
 		case OK:
 			printf("\n** NEW ENTERY OK **!\n");
 			break;
@@ -204,7 +205,7 @@ void displayEntry() {
 	char name[NAME_LENGTH];
 
 	printf("Enter name to search: ");
-	readName(name NAME_LENGTH);
+	readName(name, NAME_LENGTH);
 	TPhonebook *entry = findPerson(name);
 
 	if(entry != NULL) {
@@ -225,7 +226,7 @@ void deleteEntry() {
 
 	char name[NAME_LENGTH];
 	printf("Enter name: ");
-	readName(name NAME_LENGTH);
+	readName(name, NAME_LENGTH);
 
 	int result = deletePerson(name);
 
