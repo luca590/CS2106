@@ -133,18 +133,7 @@ void deliverHTTP(int connfd)
 	char HTTPBuffer[MAX_BUFFER_LEN];
 	char fileBuffer[MAX_FILE_SIZE];
 
-	int pid = fork();
-	if(pid < 0) {printf("Fork failed");}
-	if(pid == 0) { //child case
-	printf("Child process - my pid is: %d", getpid());
-	//------ read incoming connection, parse, request HTML file -----------
 	read(connfd, HTTPBuffer, MAX_BUFFER_LEN);	//blocking call, execution does not proceed
-	//past read(.) until data comes in or error occurs
-	}
-	if(pid > 0) { //case of parent
-	printf("Parent process - my pid is: %d", getpid());
-	read(connfd, HTTPBuffer, MAX_BUFFER_LEN);	//blocking call, execution does not proceed
-	}
 
 	int method;
 	char filename[MAX_FILENAME_LEN];
@@ -231,11 +220,35 @@ void startServer(uint16_t portNum)
 
 	writeLog("Web server started at port number %d", portNum);
 
+//	int pid = fork();
+//
+//	if(pid < 0) {printf("Fork failed");}
+//
+//	else if(pid == 0) { //child case
+//	printf("Child process - my pid is: %d", getpid());
+//	exit(0);
+//	}
+//	//case of parent - no if needed
+//	printf("Parent process - my pid is: %d", getpid());
+//	read(connfd, HTTPBuffer, MAX_BUFFER_LEN);	//blocking call, execution does not proceed
+//	}
+
 	while(1)
 	{
 		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
 		writeLog("Connection received.");
 
+	int pid = fork();
+
+	if(pid < 0) {printf("Fork failed");}
+
+	else if(pid == 0) { //child case
+	printf("Child process - my pid is: %d", getpid());
+	exit(0);
+	}
+	//case of parent - no if needed
+	printf("Parent process - my pid is: %d", getpid());
+	}
 		deliverHTTP(connfd);
 	}
 }
