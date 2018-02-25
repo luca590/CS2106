@@ -252,7 +252,7 @@ void startServer(uint16_t portNum)
 		writeLog("Connection received.");
 		deliverHTTP(connfd);
 
-		else if(pid == 0) { //child case
+		if(pid == 0) { //child case
 		exit(0);
 		} else if (pid > 0) { //parent case
 		wait(NULL);	
