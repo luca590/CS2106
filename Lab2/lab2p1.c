@@ -50,22 +50,26 @@ int fd[2];
 
 int main(int ac, char **av)
 {
+	startServer(PORTNSUM);
+
 	pipe(fd);
 
 	int pid = fork();
-	int n;	//for number of char written
 
 	if(pid < 0) {perr("Fork Failed");}
-	else if (pid == 0) { //now in child process which writes to pipe
-	close(fd[0]);	//close reading end of pipe
-	n = write(fd[0], buffer, strlen(buffer) + 1);	//do the writting
+	else if (pid == 0) { //now in child process which writes to log.txt
+		char buffer[1024];
+		close(fd[1]);
+		buffer = read(fd[0], buffer, MAX_BUFFER_LEN);	//read pipeline into buffer
 
+		FILE* log = fopen("log.txt", "w");	//open stream to log.txt file
+		fprintf(log, buffer);	//write buffer to log.txt
+		exit(0);
 	}
 	else if (pid > 0) {	//now in parent
-
+		wait(NULL);
 	}
 
-	startServer(PORTNSUM);
 }
 
 char *getCurrentTime()
@@ -195,11 +199,14 @@ void deliverHTTP(int connfd)
 //writeLog function now writes to a pipe instead of stdout
 void writeLog(const char *format, ...)
 {
+	int n;	//for number of char written
 	char logBuffer[LOG_BUFFER_LEN];
 	va_list args;
 	
 	va_start(args, format);
-	vsprintf(logBuffer, format, args);	//fprintf specifies file fprintf(File, "...")
+	close(fd[1]);
+	n = write(fd[0], format, strlen(logBuffer) + 1);	//write to the pipeline
+	//vsprintf(logBuffer, format, args);	
 	va_end(args);
 
 	printf("%s: %s\n", getCurrentTime(), logBuffer);
