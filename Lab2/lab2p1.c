@@ -46,9 +46,26 @@ char *getCurrentTime();
 void writeLog(const char *format, ...);
 void parseHTTP(const char *buffer, int *method, char *filename);
 
+int fd[2];
+
 int main(int ac, char **av)
 {
-	startServer(PORTNUM);
+	pipe(fd);
+
+	int pid = fork();
+	int n;	//for number of char written
+
+	if(pid < 0) {perr("Fork Failed");}
+	else if (pid == 0) { //now in child process which writes to pipe
+	close(fd[0]);	//close reading end of pipe
+	n = write(fd[0], buffer, strlen(buffer) + 1);	//do the writting
+
+	}
+	else if (pid > 0) {	//now in parent
+
+	}
+
+	startServer(PORTNSUM);
 }
 
 char *getCurrentTime()
@@ -173,13 +190,16 @@ void deliverHTTP(int connfd)
 	close(connfd);
 }
 
+//modified so that all logs are written to log.txt instead of stdout
+//writing to log.txt is done by single child process, listening to a pipe
+//writeLog function now writes to a pipe instead of stdout
 void writeLog(const char *format, ...)
 {
 	char logBuffer[LOG_BUFFER_LEN];
 	va_list args;
 	
 	va_start(args, format);
-	vsprintf(logBuffer, format, args);
+	vsprintf(logBuffer, format, args);	//fprintf specifies file fprintf(File, "...")
 	va_end(args);
 
 	printf("%s: %s\n", getCurrentTime(), logBuffer);
@@ -224,22 +244,23 @@ void startServer(uint16_t portNum)
 	{
 		int pid = fork();
 
-		if(pid < 0) {printf("Fork failed");}
+		if(pid < 0) {printf("Fork failed");}	//check if the fork failed	
 
 		else if(pid == 0) { //child case
 		printf("Child process - my pid is: %d", getpid());
 
-		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
+		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);	//call accept once here in the child process
 		writeLog("Connection received.");
 		deliverHTTP(connfd);
-		exit(0);
+		exit(0);	//after finishing the communication, exit. Data may not be saved
 		}
 		//case of parent - no if needed
 		printf("Parent process - my pid is: %d", getpid());
-		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);	//here, get's called twice by 2 separate processes
+		//here, accept is called twice by 2 separate processes
+		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);	
 		writeLog("Connection received.");
 		deliverHTTP(connfd);
-		wait(NULL);	
+		wait(NULL);	//wait for the child process to clean up and then exit	
 	}
 
 }
