@@ -253,8 +253,10 @@ void startServer(uint16_t portNum)
 		deliverHTTP(connfd);
 
 		if(pid == 0) { //child case
+		printf("Child process - my pid is: %d", getpid());
 		exit(0);
 		} else if (pid > 0) { //parent case
+		printf("Parent process - my pid is: %d", getpid());
 		wait(NULL);	
 		}
 	}
