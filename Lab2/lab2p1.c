@@ -220,45 +220,26 @@ void startServer(uint16_t portNum)
 
 	writeLog("Web server started at port number %d", portNum);
 
-//	while(1)
-//	{
-//		int pid = fork();
-//
-//		if(pid < 0) {printf("Fork failed");}
-//
-//		else if(pid == 0) { //child case
-//		printf("Child process - my pid is: %d", getpid());
-//
-//		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
-//		writeLog("Connection received.");
-//		deliverHTTP(connfd);
-//		exit(0);
-//		}
-//		//case of parent - no if needed
-//		printf("Parent process - my pid is: %d", getpid());
-//		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
-//		writeLog("Connection received.");
-//		deliverHTTP(connfd);
-//		wait(NULL);	
-//	}
-
 	while(1)
 	{
 		int pid = fork();
 
 		if(pid < 0) {printf("Fork failed");}
 
+		else if(pid == 0) { //child case
+		printf("Child process - my pid is: %d", getpid());
+
 		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
 		writeLog("Connection received.");
 		deliverHTTP(connfd);
-
-		if(pid == 0) { //child case
-		printf("Child process - my pid is: %d", getpid());
 		exit(0);
-		} else if (pid > 0) { //parent case
-		printf("Parent process - my pid is: %d", getpid());
-		wait(NULL);	
 		}
+		//case of parent - no if needed
+		printf("Parent process - my pid is: %d", getpid());
+		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);	//here, get's called twice by 2 separate processes
+		writeLog("Connection received.");
+		deliverHTTP(connfd);
+		wait(NULL);	
 	}
 
 }
