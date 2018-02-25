@@ -51,7 +51,6 @@ int fd[2];
 int main(int ac, char **av)
 {
 
-	startServer(PORTNUM);
 	pipe(fd);
 
 	int pid = fork();
@@ -68,6 +67,7 @@ int main(int ac, char **av)
 		exit(0);
 	}
 	else if (pid > 0) {	//now in parent
+	startServer(PORTNUM);
 		wait(NULL);
 	}
 
