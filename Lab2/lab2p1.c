@@ -134,7 +134,7 @@ void deliverHTTP(int connfd)
 	char fileBuffer[MAX_FILE_SIZE];
 
 	int pid = fork();
-	if(pid < 0) {printf("Fork failed"}
+	if(pid < 0) {printf("Fork failed");}
 	if(pid == 0) { //child case
 	printf("Child process - my pid is: %d", getpid());
 	//------ read incoming connection, parse, request HTML file -----------
