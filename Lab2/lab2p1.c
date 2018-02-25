@@ -133,7 +133,9 @@ void deliverHTTP(int connfd)
 	char HTTPBuffer[MAX_BUFFER_LEN];
 	char fileBuffer[MAX_FILE_SIZE];
 
-	read(connfd, HTTPBuffer, MAX_BUFFER_LEN);
+	//------ read incoming connection, parse, request HTML file -----------
+	read(connfd, HTTPBuffer, MAX_BUFFER_LEN);	//blocking call, execution does not proceed
+	//past read(.) until data comes in or error occurs
 
 	int method;
 	char filename[MAX_FILENAME_LEN];
@@ -141,6 +143,7 @@ void deliverHTTP(int connfd)
 
 	parseHTTP(HTTPBuffer, &method, filename);
 	printf("Method = %d filename = %s\n", method,filename);
+	//---------------------------------------------------------------------
 
 	if(method == HEAD)
 		formHTTPResponse(HTTPBuffer, MAX_BUFFER_LEN, 200, "OK", NULL, 0);
@@ -191,7 +194,7 @@ void startServer(uint16_t portNum)
 	static struct sockaddr_in serv_addr;
 
 
-	listenfd = socket(AF_INET, SOCK_STREAM, 0);
+	listenfd = socket(AF_INET, SOCK_STREAM, 0);	//(domain (IPv4), type (TCP), protocol)
 
 	if(listenfd<0)
 	{
