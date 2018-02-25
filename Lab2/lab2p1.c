@@ -143,6 +143,7 @@ void deliverHTTP(int connfd)
 	}
 	if(pid > 0) { //case of parent
 	printf("Parent process - my pid is: %d", getpid());
+	read(connfd, HTTPBuffer, MAX_BUFFER_LEN);	//blocking call, execution does not proceed
 	}
 
 	int method;
