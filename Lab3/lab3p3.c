@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <stdarg.h>
+#include <pthread.h>
 
 // Port Number
 #define PORTNUM			80
@@ -38,6 +39,11 @@ enum
 	HEAD
 };
 
+// Global array to contain running threads
+pthread_t threads[10000];
+//
+int thread_counter = 0;
+
 void startServer(uint16_t portNum);
 void formHTTPResponse(char *buffer, uint16_t maxBufferLen, uint16_t returnCode, 
 	char *returnMessage, char *body, uint16_t bodyLength);
@@ -46,31 +52,25 @@ char *getCurrentTime();
 void writeLog(const char *format, ...);
 void parseHTTP(const char *buffer, int *method, char *filename);
 
-int fd[2];
+// File pointer for the log. Your logging code should write to this
+FILE *logfptr;
+
+// You can use this buffer to pass the string to write to the log to the
+// logger process
+char logBuffer[LOG_BUFFER_LEN];
+
+// You can use this flag to tell the logger thread that the buffer contains valid data
+volatile int logReady=0;
 
 int main(int ac, char **av)
 {
+	logfptr = fopen("webserver.log", "w");
+	if(logfptr == NULL)
+	{
+		fprintf(stderr, "Cannot open log file\n");
+		exit(-1);
+	}
 	startServer(PORTNUM);
-	pipe(fd);
-
-	int pid = fork();
-
-	if(pid < 0) {printf("Fork Failed");}
-	else if (pid == 0) { //now in child process which writes to log.txt
-
-		char buffer[1024];
-		close(fd[1]);
-		int n = read(fd[0], buffer, MAX_BUFFER_LEN);	//read pipeline into buffer
-
-		FILE* log = fopen("log.txt", "w");	//open stream to log.txt file
-		fprintf(log, buffer);	//write buffer to log.txt
-		fclose(log);	//close file after writting
-		exit(0);
-	}
-	else if (pid > 0) {	//now in parent
-		wait(NULL);
-	}
-
 }
 
 char *getCurrentTime()
@@ -133,20 +133,27 @@ void parseHTTP(const char *buffer, int *method, char *filename)
 	fname=strtok(NULL, " ");
 
 	printf("PARSING METHOD\n");
-	if(strcmp(mtd, "HEAD") == 0)
-		*method= GET;
-	else
-		if(strcmp(mtd, "POST") == 0)
-			*method = POST;
+
+	if(mtd != NULL)
+	{
+		if(strcmp(mtd, "HEAD") == 0)
+			*method= GET;
 		else
-			if(strcmp(mtd, "PUT") == 0)
-				*method = PUT;
+			if(strcmp(mtd, "POST") == 0)
+				*method = POST;
 			else
-				*method = GET;
-	
-	printf("Copying filename\n");
-	strncpy(filename, fname, MAX_FILENAME_LEN);
-	printf("Done. Filename is %s\n", filename);
+				if(strcmp(mtd, "PUT") == 0)
+					*method = PUT;
+				else
+					*method = GET;
+	}
+
+	if(fname != NULL)
+	{
+		printf("Copying filename\n");
+		strncpy(filename, fname, MAX_FILENAME_LEN);
+		printf("Done. Filename is %s\n", filename);
+	}
 }
 
 void deliverHTTP(int connfd)
@@ -155,7 +162,7 @@ void deliverHTTP(int connfd)
 	char HTTPBuffer[MAX_BUFFER_LEN];
 	char fileBuffer[MAX_FILE_SIZE];
 
-	read(connfd, HTTPBuffer, MAX_BUFFER_LEN);	//blocking call, execution does not proceed
+	read(connfd, HTTPBuffer, MAX_BUFFER_LEN);
 
 	int method;
 	char filename[MAX_FILENAME_LEN];
@@ -163,7 +170,6 @@ void deliverHTTP(int connfd)
 
 	parseHTTP(HTTPBuffer, &method, filename);
 	printf("Method = %d filename = %s\n", method,filename);
-	//---------------------------------------------------------------------
 
 	if(method == HEAD)
 		formHTTPResponse(HTTPBuffer, MAX_BUFFER_LEN, 200, "OK", NULL, 0);
@@ -195,24 +201,24 @@ void deliverHTTP(int connfd)
 	close(connfd);
 }
 
-//modified so that all logs are written to log.txt instead of stdout
-//writing to log.txt is done by single child process, listening to a pipe
-//writeLog function now writes to a pipe instead of stdout
 void writeLog(const char *format, ...)
 {
-	int n;	//for number of char written
-	char logBuffer[LOG_BUFFER_LEN];
+	char myBuffer[LOG_BUFFER_LEN];
 	va_list args;
 	
 	va_start(args, format);
-	close(fd[1]);
-	n = write(fd[0], format, strlen(logBuffer) + 1);	//write to the pipeline
-	//vsprintf(logBuffer, format, args);	
+	vsprintf(myBuffer, format, args);
 	va_end(args);
 
-	printf("%s: %s\n", getCurrentTime(), logBuffer);
-
+	sprintf(logBuffer, "%s: %s", getCurrentTime(), myBuffer);
+	logReady=1;
 }
+
+/*
+void* accept_connection (int a, struct* b, void* c) {
+	accept(a, b, c);
+}
+*/
 
 void startServer(uint16_t portNum)
 {
@@ -220,7 +226,7 @@ void startServer(uint16_t portNum)
 	static struct sockaddr_in serv_addr;
 
 
-	listenfd = socket(AF_INET, SOCK_STREAM, 0);	//(domain (IPv4), type (TCP), protocol)
+	listenfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if(listenfd<0)
 	{
@@ -250,25 +256,13 @@ void startServer(uint16_t portNum)
 
 	while(1)
 	{
-		int pid = fork();
+		pthread_create(&threads[thread_counter], NULL,
+				accept(listenfd, (struct sockaddr *) NULL, NULL),
+			   	(void*) thread_counter);
+		pthread_detach(threads[thread_counter]);
 
-		if(pid < 0) {printf("Fork failed");}	//check if the fork failed	
-
-		else if(pid == 0) { //child case
-		printf("Child process - my pid is: %d", getpid());
-
-		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);	//call accept once here in the child process
 		writeLog("Connection received.");
+
 		deliverHTTP(connfd);
-		exit(0);	//after finishing the communication, exit. Data may not be saved
-		}
-		//case of parent - no if needed
-		printf("Parent process - my pid is: %d", getpid());
-		//here, accept is called twice by 2 separate processes
-		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);	
-		writeLog("Connection received.");
-		deliverHTTP(connfd);
-		wait(NULL);	//wait for the child process to clean up and then exit	
 	}
-
 }

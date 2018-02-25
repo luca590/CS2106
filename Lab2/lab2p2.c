@@ -57,7 +57,6 @@ int main() {
 		//Wait for the child ot end
 		wait(&status);
 	}
-}
 
 
 
