@@ -145,7 +145,6 @@ void deliverHTTP(int connfd)
 	printf("Parent process - my pid is: %d", getpid());
 	}
 
-
 	int method;
 	char filename[MAX_FILENAME_LEN];
 	char fetchName[MAX_FILENAME_LEN];
