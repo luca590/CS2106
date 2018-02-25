@@ -235,20 +235,23 @@ void startServer(uint16_t portNum)
 
 	while(1)
 	{
+		int pid = fork();
+
+		if(pid < 0) {printf("Fork failed");}
+
+		else if(pid == 0) { //child case
+		printf("Child process - my pid is: %d", getpid());
+
 		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
 		writeLog("Connection received.");
-
-	int pid = fork();
-
-	if(pid < 0) {printf("Fork failed");}
-
-	else if(pid == 0) { //child case
-	printf("Child process - my pid is: %d", getpid());
-	exit(0);
-	}
-	//case of parent - no if needed
-	printf("Parent process - my pid is: %d", getpid());
-	}
+		deliverHTTP(connfd);
+		exit(0);
+		}
+		//case of parent - no if needed
+		printf("Parent process - my pid is: %d", getpid());
+		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
+		writeLog("Connection received.");
 		deliverHTTP(connfd);
 	}
+
 }
