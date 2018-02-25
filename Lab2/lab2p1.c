@@ -252,6 +252,7 @@ void startServer(uint16_t portNum)
 		connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
 		writeLog("Connection received.");
 		deliverHTTP(connfd);
+		wait(NULL);	
 	}
 
 }
