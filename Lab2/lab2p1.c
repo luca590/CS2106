@@ -51,24 +51,23 @@ int fd[2];
 int main(int ac, char **av)
 {
 
+	startServer(PORTNUM);
 	pipe(fd);
 
 	int pid = fork();
 
 	if(pid < 0) {printf("Fork Failed");}
 	else if (pid == 0) { //now in child process which writes to log.txt
-	startServer(PORTNUM);
 		char buffer[1024];
 		close(fd[1]);
 		int n = read(fd[0], buffer, MAX_BUFFER_LEN);	//read pipeline into buffer
 
 		FILE* log = fopen("log.txt", "w");	//open stream to log.txt file
 		fprintf(log, buffer);	//write buffer to log.txt
-		fclose(log);
+		fclose(log);	//close file after writting
 		exit(0);
 	}
 	else if (pid > 0) {	//now in parent
-	startServer(PORTNUM);
 		wait(NULL);
 	}
 
