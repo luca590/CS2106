@@ -257,12 +257,11 @@ void startServer(uint16_t portNum)
 	while(1)
 	{
 		pthread_create(&threads[thread_counter], NULL,
-				accept(listenfd, (struct sockaddr *) NULL, NULL),
-			   	(void*) thread_counter);
+			   	startServer, (void*) thread_counter);
 		pthread_detach(threads[thread_counter]);
 		thread_counter++;
 		
-//		accept(listenfd, (struct sockaddr *) NULL, NULL);
+		accept(listenfd, (struct sockaddr *) NULL, NULL);
 
 		writeLog("Connection received.");
 
