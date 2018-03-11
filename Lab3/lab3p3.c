@@ -13,7 +13,7 @@
 #include <pthread.h>
 
 // Port Number
-#define PORTNUM			80
+#define PORTNUM			92
 
 // Maximum size of HTTP response
 #define MAX_BUFFER_LEN	65535
@@ -260,6 +260,9 @@ void startServer(uint16_t portNum)
 				accept(listenfd, (struct sockaddr *) NULL, NULL),
 			   	(void*) thread_counter);
 		pthread_detach(threads[thread_counter]);
+		thread_counter++;
+		
+//		accept(listenfd, (struct sockaddr *) NULL, NULL);
 
 		writeLog("Connection received.");
 
