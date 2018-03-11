@@ -50,7 +50,6 @@ int fd[2];
 
 int main(int ac, char **av)
 {
-
 	startServer(PORTNUM);
 	pipe(fd);
 
