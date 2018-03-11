@@ -218,7 +218,7 @@ void writeLog(const char *format, ...)
 }
 
 
-void* accept_connection (int a, struct* b, void* c) {
+void* accept_connection (int a, void* b, void* c) {
 	accept(a, b, c);
 }
 
@@ -260,7 +260,7 @@ void startServer(uint16_t portNum)
 	while(1)
 	{
 		pthread_create(&threads[thread_counter], NULL,
-		accept_connection, (listenfd, (struct sockaddr *) NULL, NULL);
+		accept_connection, (listenfd, (struct sockaddr *) NULL, NULL));
 
 		pthread_detach(threads[thread_counter]);
 		thread_counter++;
