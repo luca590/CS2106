@@ -13,7 +13,7 @@
 #include <pthread.h>
 
 // Port Number
-#define PORTNUM			92
+#define PORTNUM			80
 
 // Maximum size of HTTP response
 #define MAX_BUFFER_LEN	65535
