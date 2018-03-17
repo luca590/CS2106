@@ -70,6 +70,12 @@ int main(int ac, char **av)
 		fprintf(stderr, "Cannot open log file\n");
 		exit(-1);
 	}
+
+	pthread_create(&threads[thread_counter], NULL,
+	pollLogerThread, NULL));
+	pthread_detach(threads[thread_counter]);
+	thread_counter++;
+
 	startServer(PORTNUM);
 }
 
@@ -222,6 +228,14 @@ void* accept_connection (int a, void* b, void* c) {
 	accept(a, b, c);
 }
 
+void* pollLogerThread() {
+	if (logReady = 0) { 
+		fflush(logfptr);	
+		writeLog();
+		logReady = 0;
+	}
+}
+
 
 void startServer(uint16_t portNum)
 {
@@ -259,10 +273,14 @@ void startServer(uint16_t portNum)
 
 	while(1)
 	{
+		//create thread and point the thread to the accep_connection function, pass in args
 		pthread_create(&threads[thread_counter], NULL,
 		accept_connection, (listenfd, (struct sockaddr *) NULL, NULL));
 
+		//detach means the thread is immediately destroyed instead of waiting for the new connection
+		//to join with another thread
 		pthread_detach(threads[thread_counter]);
+		//connection has been added so count up in the array
 		thread_counter++;
 
 		writeLog("Connection received.");
